@@ -306,8 +306,7 @@ class Sort(object):
       self.track_q.put(track_q_input)
       track_q_input = [] # <- clear를 하면 queue에 담긴 것도 지워짐. 
 
-      time.sleep(0.05)
-
+      time.sleep(0.04)
     return 0
   
   def __del__(self) :

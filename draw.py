@@ -93,12 +93,13 @@ class Draw() :
                 break
             
             time.sleep(0.01)
+
             if self.frame_q.qsize() == 0 :
                 continue
             
             if self.track_q.qsize() == 0 :
                 continue
-
+            
             img = self.frame_q.get()
 
             track = self.track_q.get()
