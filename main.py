@@ -4,6 +4,7 @@ import time
 import cv2
 import sys
 import select
+
 #add me
 from cam import Cam
 from npu import Yolov5
