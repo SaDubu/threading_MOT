@@ -53,7 +53,6 @@ class Logger :
 class Monitor:
     def __init__(self, interval=5):
         self.interval = interval
-        self.running = False
 
         # External data (FPS, Queue sizes...)
         self.data = {

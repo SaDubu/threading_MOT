@@ -11,6 +11,7 @@ from npu import Yolov5
 from sort import Sort
 from draw import Draw
 from thread import WatchThread
+from log_mointer import Monitor
 
 DEVICE_PORT = "/dev/video11"
 MODEL_NAME = "yolo.rknn"
@@ -50,11 +51,14 @@ def main() :
     track.set_track_q(track_queue)
     track.set_stop_q(stop_queue)
 
+    monitor = Monitor()
+
     #thread setting
     cam_thread = WatchThread(target=camera.run, name='cam')
     yolo_thread = WatchThread(target=yolo.run, name='yolo')
     track_thread = WatchThread(target=track.run, name='track')
     canvas_thread = WatchThread(target=canvas.run, name='canvas')
+    monitor_thread = WatchThread(target=monitor.run, name='monitor')
 
     #test
     frame_queue_size = 0
@@ -79,6 +83,11 @@ def main() :
         track_queue_size = track_queue.qsize()
         copy_frame_queue_size = copy_frame_queue.qsize()
 
+        monitor.update("queue_frame_lenth", frame_queue_size)
+        monitor.update("queue_detect", box_queue_size)
+        monitor.update("queue_track", track_queue_size)
+        monitor.update("queue_capture", copy_frame_queue_size)
+
         dr, _, _ = select.select([sys.stdin], [], [], 0.1)
         if dr:
             cmd = sys.stdin.readline().strip()
@@ -94,6 +103,7 @@ def main() :
     yolo_thread.thread_end()
     track_thread.thread_end()
     canvas_thread.thread_end()
+    monitor_thread.thread_end()
 
     return 0
 
