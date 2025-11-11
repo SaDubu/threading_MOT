@@ -79,11 +79,6 @@ def main() :
         track_queue_size = track_queue.qsize()
         copy_frame_queue_size = copy_frame_queue.qsize()
 
-        sys.stdout.write("\r" + " " *75 +"\r")
-        print(f'\rframe_q size = {frame_queue_size}, box_q size = {box_queue_size}, trk_q size = {track_queue_size} copy_frame_q_size = {copy_frame_queue_size}', end='')
-        sys.stdout.flush()
-
-        # 🔹 키보드 입력 체크 (0.1초마다)
         dr, _, _ = select.select([sys.stdin], [], [], 0.1)
         if dr:
             cmd = sys.stdin.readline().strip()
