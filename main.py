@@ -50,8 +50,6 @@ def main() :
     track.set_track_q(track_queue)
     track.set_stop_q(stop_queue)
 
-
-
     #thread setting
     cam_thread = WatchThread(target=camera.run, name='cam')
     yolo_thread = WatchThread(target=yolo.run, name='yolo')
