@@ -12,6 +12,7 @@ class Cam :
         self.frame = None
         self.cap = None
         self.frame_q = None
+        self.fps_q = None
         self.width = WIDTH
         self.height = HEIGHT
 
@@ -29,6 +30,9 @@ class Cam :
 
         return 0
     
+    def set_fps_q(self, q) :
+        self.fps_q = q
+
     def set_frame_q(self, q) :
         self.frame_q = q
 
@@ -51,6 +55,9 @@ class Cam :
         return True
 
     def run(self) :
+        count = 0
+        frame_get = 0
+        fps_q_size = 0
         while True :
             if self.is_stop() :
                 break
@@ -64,6 +71,11 @@ class Cam :
             #print(self.frame.shape)
             self.frame_q.put(self.frame)
             #print(self.frame_q.qsize())
+            count += 1
+            fps_q_size = self.fps_q.qsize()
+            if fps_q_size != 0:
+                self.fps_q.get()
+            self.fps_q.put(count)
 
     def test(self) :
         ret = self.get_image()
@@ -74,7 +86,7 @@ class Cam :
         cv2.waitKey(1) 
 
     def __del__(self) :
-        print('cam class destructor')
+        print('\ncam class destructor')
         if self.cap :
             self.cap.release()
     

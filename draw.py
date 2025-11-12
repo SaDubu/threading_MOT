@@ -15,6 +15,10 @@ class Draw() :
         self.track_q = None
         self.frame_q = None
         self.stop_q = None
+        self.drawed_q = None
+    
+    def set_draw_q(self, q) :
+        self.drawed_q = q
 
     def set_frame_q(self, q) :
         self.frame_q = q
@@ -91,11 +95,11 @@ class Draw() :
         while True :
             if self.is_stop() :
                 break
-            
+
             time.sleep(0.01)
 
             if self.frame_q.qsize() == 0 :
-                continue
+                continue    
             
             if self.track_q.qsize() == 0 :
                 continue
@@ -111,17 +115,11 @@ class Draw() :
 
             self.draw(img, box, score, class_id, track_id)
 
-            cv2.imshow("show", img)
-
-            input_key = cv2.waitKey(1) & 0xFF
-
-            if input_key == ord('q') :
-                print()
-                print("Quit command (q) detected !")
-                break
+            self.drawed_q.put(img)
         
         self.stop_q.put(True)
 
-        cv2.destroyAllWindows()
-
         return 0
+
+    def __del__(self):
+        print('\ndraw class destructor')

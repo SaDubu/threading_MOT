@@ -51,21 +51,33 @@ class Logger :
         return logger
 
 class Monitor:
-    def __init__(self, interval=5):
+    def __init__(self, interval=1):
         self.interval = interval
+
+        self.stop_q = None
+        self.past_frame_lenth = 0
+        self.fps_q = None
 
         # External data (FPS, Queue sizes...)
         self.data = {
             "camera_fps": 0,
-            "queue_frame_lenth" : 0,
             "queue_capture": 0,
             "queue_detect": 0,
-            "queue_track": 0
+            "queue_track": 0,
+            "queue_camera_in": 0
         }
+    
+    def set_stop_q(self, q) :
+        self.stop_q = q
+
+    def set_fps_q(self, q) :
+        self.fps_q = q
 
     def calculate_fps(self) :
-        lenth = self.data["queue_frame_lenth"]
-        fps = lenth / self.interval
+        lenth = self.fps_q.get()
+        self.past_frame_lenth = lenth - self.past_frame_lenth
+        fps = self.past_frame_lenth / self.interval
+        self.past_frame_lenth = lenth
         self.update("camera_fps", fps)
 
     def update(self, key, value):
@@ -78,9 +90,17 @@ class Monitor:
         except:
             return -1
 
-    def _run(self):
+    def is_stop(self) :
+        stop_q_size = self.stop_q.qsize()
+        if stop_q_size == 0 :
+            return False
+        return True
+
+    def run(self):
         while True:
-            self.calculate_fps
+            self.calculate_fps()
+            if self.is_stop() :
+                break
             log_data = {
                 "fps": {
                     "camera": self.data["camera_fps"],
@@ -91,6 +111,7 @@ class Monitor:
                     "memory_mb": psutil.virtual_memory().used / 1024 / 1024,
                 },
                 "queues": {
+                    "camera_in" : self.data["queue_camera_in"],
                     "capture": self.data["queue_capture"],
                     "detect": self.data["queue_detect"],
                     "track": self.data["queue_track"],
@@ -103,9 +124,13 @@ class Monitor:
                 f"[MEM] {log_data['system']['memory_mb']:.0f}MB | "
                 f"[Q] C:{log_data['queues']['capture']} "
                 f"D:{log_data['queues']['detect']} "
-                f"T:{log_data['queues']['track']}"
+                f"T:{log_data['queues']['track']} "
+                f"C_i:{log_data['queues']['camera_in']}"
             )
 
-            print("\r" + terminal_msg, end="", flush=True)
+            print("\r" + terminal_msg + "    ", end="", flush=True)
 
             time.sleep(self.interval)
+
+    def __del__(self):
+        print('\nmonitor class destructor')

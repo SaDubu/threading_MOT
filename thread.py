@@ -18,8 +18,8 @@ class WatchThread :
     
     def thread_end(self) :
         self.thread.join()
-        self.thread = None
 
     def __del__(self) :
+        print('\nwatchThread class desturctor')
         if self.thread :
             self.thread.join()

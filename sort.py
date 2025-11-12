@@ -310,4 +310,4 @@ class Sort(object):
     return 0
   
   def __del__(self) :
-    print('sort class destructor')  
+    print('\nsort class destructor')  

@@ -268,7 +268,7 @@ class Yolov5() :
 
             if self.frame_q.qsize() == 0 :
                 continue
-            
+
             img = self.frame_q.get()
             
             end = self.process_for_run(img, tracker_input)
@@ -285,7 +285,7 @@ class Yolov5() :
         return 0 
 
     def __del__(self) :
-        print('yolov5 class destructor')
+        print('\nyolov5 class destructor')
         if self.rknn :
             self.rknn.release()
 
