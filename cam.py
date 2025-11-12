@@ -15,6 +15,11 @@ class Cam :
         self.fps_q = None
         self.width = WIDTH
         self.height = HEIGHT
+        self.logger = None
+    
+    def set_logger(self, logger_object) :
+        self.logger = logger_object
+        self.logger.info('cam class object activate')
 
     def set_frame_size(self, w=None, h=None) :
         if w is not None :
@@ -63,8 +68,8 @@ class Cam :
                 break
             ret = self.get_image()
             if ret == 1:
-                print()
-                print("what? no image")
+                print("no getting image")
+                self.logger.error('no getting image')
                 self.stop_q.put(True)
                 break
             self.frame = cv2.resize(self.frame, (self.width, self.height))

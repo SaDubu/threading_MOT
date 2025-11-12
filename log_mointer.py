@@ -24,8 +24,8 @@ class JsonFormatter(logging.Formatter):
 
 class Logger :
     def __init__(self) :
-        self.text = text
-
+        self.info('logger class activate')
+    @staticmethod
     def get_logger(name):
         logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
@@ -49,6 +49,10 @@ class Logger :
             logger.addHandler(error_handler)
 
         return logger
+    
+    def __del__(self) :
+        print('\nlogger class destructor')
+
 
 class Monitor:
     def __init__(self, interval=1):
@@ -66,6 +70,12 @@ class Monitor:
             "queue_track": 0,
             "queue_camera_in": 0
         }
+
+        self.logger = None
+    
+    def set_logger(self, logger_object) :
+        self.logger = logger_object
+        self.logger.info('monitor class object activate')
     
     def set_stop_q(self, q) :
         self.stop_q = q
@@ -127,6 +137,8 @@ class Monitor:
                 f"T:{log_data['queues']['track']} "
                 f"C_i:{log_data['queues']['camera_in']}"
             )
+
+            self.logger.info(log_data)
 
             print("\r" + terminal_msg + "    ", end="", flush=True)
 

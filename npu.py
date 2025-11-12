@@ -22,6 +22,11 @@ class Yolov5() :
         self.frame_q = None
         self.box_q = None
         self.copy_frame_q = None
+        self.logger = None
+    
+    def set_logger(self, logger_object) :
+        self.logger = logger_object
+        self.logger.info('yolov5 class object activate')
 
     def is_stop(self) :
         stop_q_size = self.stop_q.qsize()
@@ -226,13 +231,17 @@ class Yolov5() :
 
         ret = self.rknn.load_rknn(self.model)
         if ret != 0 :
-            print("what???")
-            exit()
+            print('not_load_rknn_model')
+            self.logger.error('not_load_rknn_model')
+            self.stop_q.put(True)
+            return 1
 
         ret = self.rknn.init_runtime(target='rk3588', core_mask=use_core)
         if ret != 0 :
-            print("what???")
-            exit()
+            print('model is not init')
+            self.logger.error('model is not init')
+            self.stop_q.put(True)
+            return 1
 
         print("model init complate")
         return 0
@@ -259,7 +268,6 @@ class Yolov5() :
     def run(self) :
         img = None
         end = None
-
 
         tracker_input = []
         while True :

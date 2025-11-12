@@ -11,12 +11,15 @@ from npu import Yolov5
 from sort import Sort
 from draw import Draw
 from thread import WatchThread
-from log_mointer import Monitor
+from log_mointer import Monitor, Logger
 
 DEVICE_PORT = "/dev/video11"
 MODEL_NAME = "yolo.rknn"
 
 def run() :
+    #log_writer
+    logger = Logger.get_logger('npu_dSort')
+    logger.info('Programe START!')
     #camera, canvas, main - put, all - get
     stop_queue = queue.Queue()
     #camera - put, yolo - get
@@ -31,6 +34,8 @@ def run() :
     fps_queue = queue.Queue()
     #canvas - put, main - get
     drawed_queue = queue.Queue()
+
+    logger.info('Queue create')
 
     #object setting
     camera = Cam()
@@ -53,6 +58,7 @@ def run() :
     canvas.set_stop_q(stop_queue)
     canvas.set_draw_q(drawed_queue)
 
+    #no log write
     track = Sort(
         max_age=3,
         min_hits=1,
@@ -65,6 +71,12 @@ def run() :
     monitor = Monitor()
     monitor.set_stop_q(stop_queue)
     monitor.set_fps_q(fps_queue)
+
+    #log_writer setting
+    camera.set_logger(logger)
+    yolo.set_logger(logger)
+    canvas.set_logger(logger)
+    monitor.set_logger(logger)
 
     #thread setting
     threads = []
@@ -110,9 +122,11 @@ def run() :
 
         q_size_sum = frame_queue_size + box_queue_size + track_queue_size + copy_frame_queue_size + drawed_queue_size
 
-        if q_size_sum > 300 :
+        if q_size_sum > 200 :
             stop_queue.put(True)
             emergency_stop = True
+            logger.error('The sum of all queue size is 200 or more')
+            logger.info('Emergency stop has been activated.')
             break
 
         monitor.update("queue_camera_in", frame_queue_size)
@@ -130,6 +144,7 @@ def run() :
 
         if input_key == ord('q') :
             print("\n\n\033[1;31m⚠️  [EXIT] Termination command 'q' received. Stopping threads...\033[0m\n")
+            logger.info("  [EXIT] Termination command 'q' received. Stopping threads... ")
             stop_queue.put(True)
             break
             
@@ -143,7 +158,6 @@ def run() :
 def main() :
     is_run_fail = False
     while True :
-        time.sleep(10)
         is_run_fail = run()
         if not is_run_fail :
             break

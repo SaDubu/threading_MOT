@@ -213,6 +213,12 @@ class Sort(object):
     self.stop_q = None
     self.box_q = None
     self.track_q = None
+
+    self.logger = None
+    
+  def set_logger(self, logger_object) :
+    self.logger = logger_object
+    self.logger.info('monitor class object activate')
   
   def set_stop_q(self, q) :
     self.stop_q = q

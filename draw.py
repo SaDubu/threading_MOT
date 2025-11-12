@@ -16,6 +16,11 @@ class Draw() :
         self.frame_q = None
         self.stop_q = None
         self.drawed_q = None
+        self.logger = None
+    
+    def set_logger(self, logger_object) :
+        self.logger = logger_object
+        self.logger.info('draw class object activate')
     
     def set_draw_q(self, q) :
         self.drawed_q = q
