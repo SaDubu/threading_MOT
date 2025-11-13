@@ -20,6 +20,7 @@ DEVICE_PORT = "/dev/video11"
 MODEL_NAME = "yolo.rknn"
 SORT_CNN_MODEL_NAME = 'resnet18_outdim_10.rknn'
 
+#issue mem rick !!
 
 def set_track(option_num, box_queue, track_queue, stop_queue, sort_frame_queue) :
     track = None
@@ -101,6 +102,7 @@ def run(option_num) :
     track = set_track(option_num, box_queue, track_queue, stop_queue, sort_frame_queue)
 
     if track == 1 :
+        camera.set_sort_frame_q(None)
         return 1
 
     monitor = Monitor()

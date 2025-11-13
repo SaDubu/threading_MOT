@@ -85,12 +85,15 @@ class Cam :
             self.frame_q.put(self.frame)
             #print(self.frame_q.qsize())
             self.copy_frame_q.put(self.frame)
-            self.sort_frame_q.put(self.frame)
+            
             count += 1
             fps_q_size = self.fps_q.qsize()
             if fps_q_size != 0:
                 self.fps_q.get()
             self.fps_q.put(count)
+            if self.sort_frame_q == None :
+                continue
+            self.sort_frame_q.put(self.frame)
 
     def test(self) :
         ret = self.get_image()

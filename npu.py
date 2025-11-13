@@ -290,7 +290,7 @@ class Yolov5() :
 
             if self.frame_q.qsize() == 0 :
                 continue
-
+            start = time.time()
             img = self.frame_q.get()
             
             end = self.process_for_run(img, tracker_input)
@@ -301,6 +301,9 @@ class Yolov5() :
             self.box_q.put(tracker_input)
 
             tracker_input = []
+            e = time.time()
+
+            #print(f'npu time {e-start}')
                 
         return 0 
 
