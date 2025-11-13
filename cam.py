@@ -13,6 +13,8 @@ class Cam :
         self.cap = None
         self.frame_q = None
         self.fps_q = None
+        self.copy_frame_q = None
+        self.sort_frame_q = None
         self.width = WIDTH
         self.height = HEIGHT
         self.logger = None
@@ -40,6 +42,12 @@ class Cam :
 
     def set_frame_q(self, q) :
         self.frame_q = q
+
+    def set_copy_frame_q(self, q) :
+        self.copy_frame_q = q
+
+    def set_sort_frame_q(self, q) :
+        self.sort_frame_q = q
 
     def set_stop_q(self, q) :
         self.stop_q = q
@@ -76,6 +84,8 @@ class Cam :
             #print(self.frame.shape)
             self.frame_q.put(self.frame)
             #print(self.frame_q.qsize())
+            self.copy_frame_q.put(self.frame)
+            self.sort_frame_q.put(self.frame)
             count += 1
             fps_q_size = self.fps_q.qsize()
             if fps_q_size != 0:

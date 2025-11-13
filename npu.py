@@ -8,11 +8,29 @@ import numpy as np
 import cv2
 from rknn.api import RKNN
 
-RKNN_MODEL = 'yolov5s.rknn'
-
 OBJ_THRESH = 0.35
 NMS_THRESH = 0.45
 IMG_SIZE = 640
+
+def get_model(model_name, use_core=0x0) :
+    rknn = RKNN(verbose=True)
+    ret = rknn.load_rknn(model_name)
+    if ret != 0 :
+        print(f'not_load_{model_name}')
+        self.logger.error(f'not_load_{model_name}')
+        self.stop_q.put(True)
+        return 1
+
+    ret = rknn.init_runtime(target='rk3588', core_mask=use_core)
+    if ret != 0 :
+        print(f'{model_name} is not init')
+        self.logger.error(f'{model_name} is not init')
+        self.stop_q.put(True)
+        return 1
+
+    print(f"{model_name} init complate")
+
+    return rknn    
 
 class Yolov5() :
     def __init__(self) :
@@ -21,7 +39,6 @@ class Yolov5() :
         self.rknn = None
         self.frame_q = None
         self.box_q = None
-        self.copy_frame_q = None
         self.logger = None
     
     def set_logger(self, logger_object) :
@@ -33,9 +50,6 @@ class Yolov5() :
         if stop_q_size == 0 :
             return False
         return True
-
-    def set_copy_frame_q(self, q) :
-        self.copy_frame_q = q
 
     def set_frame_q(self, q) :
         self.frame_q = q
@@ -285,8 +299,6 @@ class Yolov5() :
                 continue
 
             self.box_q.put(tracker_input)
-
-            self.copy_frame_q.put(img)
 
             tracker_input = []
                 

@@ -218,7 +218,7 @@ class Sort(object):
     
   def set_logger(self, logger_object) :
     self.logger = logger_object
-    self.logger.info('monitor class object activate')
+    self.logger.info('sort class object activate')
   
   def set_stop_q(self, q) :
     self.stop_q = q
