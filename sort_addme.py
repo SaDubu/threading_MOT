@@ -34,6 +34,7 @@ from filterpy.kalman import KalmanFilter
 from scipy.optimize import linear_sum_assignment
 
 import cv2
+import queue
 
 np.random.seed(0)
 
@@ -634,14 +635,18 @@ class Sort_addme(object):
         while True :
             if self.is_stop() :
                 break
-            if self.sort_frame_q.qsize() == 0 :
+
+            try :
+                raw_data = self.box_q.get_nowait()
+            except queue.Empty:
+                time.sleep(0.001)
                 continue
-            if self.box_q.qsize() == 0 :
+
+            try :
+                frame = self.sort_frame_q.get_nowait()
+            except queue.Empty:
+                time.sleep(0.001)
                 continue
-            
-            frame = self.sort_frame_q.get()
-        
-            raw_data = self.box_q.get()
             
             np_data = np.asarray(raw_data, dtype=np.float32)
 

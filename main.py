@@ -35,7 +35,7 @@ def show_top(label='label') :
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics("lineno")
 
-        with open(MEMORY_LOG_FILE, "a", encoding='utf-8') as f :
+        with open(MEMORY_LOG_FILE, "w", encoding='utf-8') as f :
             f.write(f'\n==== Momory at {label} ==== \n')
             for stat in top_stats[:25] :
                 f.write(str(stat) + "\n")
@@ -151,14 +151,15 @@ def run(option_num) :
     track_thread = WatchThread(target=track.run, name='track')
     canvas_thread = WatchThread(target=canvas.run, name='canvas')
     monitor_thread = WatchThread(target=monitor.run, name='monitor')
-    memory_thread = WatchThread(target=show_top, name='n')
+    #memort rick, find
+    #memory_thread = WatchThread(target=show_top, name='n')
 
     threads.append(cam_thread)
     threads.append(yolo_thread)
     threads.append(track_thread)
     threads.append(canvas_thread)
     threads.append(monitor_thread)
-    threads.append(memory_thread)
+    #threads.append(memory_thread)
 
     frame_queue_size = 0
     box_queue_size = 0
