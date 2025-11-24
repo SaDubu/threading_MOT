@@ -40,6 +40,10 @@ class Yolov5() :
         self.frame_q = None
         self.box_q = None
         self.logger = None
+        self.no_detect_flag = None
+
+    def set_no_detect_flag(self, q) :
+        self.no_detect_flag = q
     
     def set_logger(self, logger_object) :
         self.logger = logger_object
@@ -246,14 +250,14 @@ class Yolov5() :
         ret = self.rknn.load_rknn(self.model)
         if ret != 0 :
             print('not_load_rknn_model')
-            self.logger.error('not_load_rknn_model')
+            #self.logger.error('not_load_rknn_model')
             self.stop_q.put(True)
             return 1
 
         ret = self.rknn.init_runtime(target='rk3588', core_mask=use_core)
         if ret != 0 :
             print('model is not init')
-            self.logger.error('model is not init')
+            #self.logger.error('model is not init')
             self.stop_q.put(True)
             return 1
 
@@ -290,20 +294,19 @@ class Yolov5() :
 
             if self.frame_q.qsize() == 0 :
                 continue
-            start = time.time()
+
             img = self.frame_q.get()
             
             end = self.process_for_run(img, tracker_input)
 
             if end == 1 :
+                self.logger.error('yolo error')
+                self.no_detect_flag.put(True)
                 continue
-
+            
             self.box_q.put(tracker_input)
 
             tracker_input = []
-            e = time.time()
-
-            #print(f'npu time {e-start}')
                 
         return 0 
 

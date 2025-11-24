@@ -639,7 +639,6 @@ class Sort_addme(object):
             if self.box_q.qsize() == 0 :
                 continue
             
-            start = time.time()
             frame = self.sort_frame_q.get()
         
             raw_data = self.box_q.get()
@@ -658,8 +657,6 @@ class Sort_addme(object):
                 track_q_input.append(([x1, y1, x2, y2], t_id, t_cla, t_cos_sim))
             self.track_q.put(track_q_input)
             track_q_input = [] # <- clear를 하면 queue에 담긴 것도 지워짐. 
-            e = time.time()
-            #print(f'sort_addme time {e-start}')
             
         return 0
 

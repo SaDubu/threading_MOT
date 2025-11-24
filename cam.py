@@ -71,6 +71,9 @@ class Cam :
         count = 0
         frame_get = 0
         fps_q_size = 0
+        input_npu_img = None
+        input_draw_img = None
+        input_sort_img = None
         while True :
             if self.is_stop() :
                 break
@@ -80,20 +83,25 @@ class Cam :
                 self.logger.error('no getting image')
                 self.stop_q.put(True)
                 break
-            self.frame = cv2.resize(self.frame, (self.width, self.height))
+            input_npu_img = None
+            input_draw_img = None
+            input_sort_img = None
+            input_npu_img = cv2.resize(self.frame, (self.width, self.height))
             #print(self.frame.shape)
-            self.frame_q.put(self.frame)
+            self.frame_q.put(input_npu_img)
             #print(self.frame_q.qsize())
-            self.copy_frame_q.put(self.frame)
+            input_draw_img = input_npu_img.copy()
+            self.copy_frame_q.put(input_draw_img)
             
             count += 1
             fps_q_size = self.fps_q.qsize()
             if fps_q_size != 0:
                 self.fps_q.get()
             self.fps_q.put(count)
-            if self.sort_frame_q == None :
+            if self.sort_frame_q:
                 continue
-            self.sort_frame_q.put(self.frame)
+            input_sort_img = input_draw_img.copy()
+            self.sort_frame_q.put(input_sort_img)
 
     def test(self) :
         ret = self.get_image()

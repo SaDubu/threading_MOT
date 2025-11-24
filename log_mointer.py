@@ -107,6 +107,8 @@ class Monitor:
         return True
 
     def run(self):
+        log_data = None
+        terminal_msg = None
         while True:
             self.calculate_fps()
             if self.is_stop() :
@@ -141,6 +143,9 @@ class Monitor:
             self.logger.info(log_data)
 
             print("\r" + terminal_msg + "    ", end="", flush=True)
+
+            log_data = None
+            terminal_msg = None
 
             time.sleep(self.interval)
 

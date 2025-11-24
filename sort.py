@@ -29,6 +29,7 @@ import glob
 import time
 import argparse
 from filterpy.kalman import KalmanFilter
+import queue
 
 np.random.seed(0)
 
@@ -294,10 +295,12 @@ class Sort(object):
     while True :
       if self.is_stop() :
         break
-      if self.box_q.qsize() == 0 :
+
+      try :
+        raw_data = self.box_q.get_nowait()
+      except queue.Empty:
+        time.sleep(0.003)
         continue
-  
-      raw_data = self.box_q.get()
       
       np_data = np.asarray(raw_data, dtype=np.float32)
 
@@ -312,7 +315,6 @@ class Sort(object):
       self.track_q.put(track_q_input)
       track_q_input = [] # <- clear를 하면 queue에 담긴 것도 지워짐. 
 
-      time.sleep(0.04)
     return 0
   
   def __del__(self) :

@@ -5,6 +5,7 @@ import cv2
 import sys
 import select
 import argparse
+import tracemalloc
 
 #add me
 from cam import Cam
@@ -19,8 +20,27 @@ from sort_addme import Sort_addme
 DEVICE_PORT = "/dev/video11"
 MODEL_NAME = "yolo.rknn"
 SORT_CNN_MODEL_NAME = 'resnet18_outdim_10.rknn'
+MEMORY_LOG_FILE = 'memory_log.txt'
 
-#issue mem rick !!
+stop = False
+
+tracemalloc.start()
+
+def show_top(label='label') :
+    with open(MEMORY_LOG_FILE, "w", encoding='utf-8') as f :
+        f.write(f'Start! \n\n')
+    while True:
+        if stop :
+            break
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics("lineno")
+
+        with open(MEMORY_LOG_FILE, "a", encoding='utf-8') as f :
+            f.write(f'\n==== Momory at {label} ==== \n')
+            for stat in top_stats[:25] :
+                f.write(str(stat) + "\n")
+
+        time.sleep(2)
 
 def set_track(option_num, box_queue, track_queue, stop_queue, sort_frame_queue) :
     track = None
@@ -53,11 +73,12 @@ def set_track(option_num, box_queue, track_queue, stop_queue, sort_frame_queue) 
 
     return track
 def run(option_num) :
+    global stop
     #log_writer
     logger = Logger.get_logger('npu_dSort')
     logger.info(f'Programe START! option = {option_num}')
     #camera, canvas, main - put, all - get
-    stop_queue = queue.Queue()
+    stop_queue = queue.Queue(maxsize=1)
     #camera - put, yolo - get
     frame_queue = queue.Queue()
     #camera - put, sort_addme -get
@@ -72,6 +93,8 @@ def run(option_num) :
     fps_queue = queue.Queue()
     #canvas - put, main - get
     drawed_queue = queue.Queue()
+    #main - get, yolo - put
+    no_detect_flag = queue.Queue()
 
     logger.info('Queue create')
 
@@ -90,19 +113,24 @@ def run(option_num) :
     yolo.set_frame_q(frame_queue)
     yolo.set_box_q(box_queue)
     yolo.set_stop_q(stop_queue)
+    yolo.set_no_detect_flag(no_detect_flag)
 
     canvas = Draw()
     canvas.set_frame_q(copy_frame_queue)
     canvas.set_track_q(track_queue)
     canvas.set_stop_q(stop_queue)
     canvas.set_draw_q(drawed_queue)
+    canvas.set_no_detect_flag(no_detect_flag)
 
     track = None
 
-    track = set_track(option_num, box_queue, track_queue, stop_queue, sort_frame_queue)
+    track= set_track(option_num, box_queue, track_queue, stop_queue, sort_frame_queue)
+
+    if option_num == 1 :
+        camera.set_sort_frame_q(True)
 
     if track == 1 :
-        camera.set_sort_frame_q(None)
+        camera.set_sort_frame_q(True)
         return 1
 
     monitor = Monitor()
@@ -123,12 +151,14 @@ def run(option_num) :
     track_thread = WatchThread(target=track.run, name='track')
     canvas_thread = WatchThread(target=canvas.run, name='canvas')
     monitor_thread = WatchThread(target=monitor.run, name='monitor')
+    memory_thread = WatchThread(target=show_top, name='n')
 
     threads.append(cam_thread)
     threads.append(yolo_thread)
     threads.append(track_thread)
     threads.append(canvas_thread)
     threads.append(monitor_thread)
+    threads.append(memory_thread)
 
     frame_queue_size = 0
     box_queue_size = 0
@@ -147,9 +177,6 @@ def run(option_num) :
     while True:
         if stop_queue.qsize() != 0:
             break
-        
-        for i in range(threads_lenth):
-            threads[i].restart_if_out()
 
         frame_queue_size = frame_queue.qsize()
         box_queue_size = box_queue.qsize()
@@ -162,6 +189,7 @@ def run(option_num) :
         if q_size_sum > 200 :
             stop_queue.put(True)
             emergency_stop = True
+            stop = True
             logger.error('The sum of all queue size is 200 or more')
             logger.info('Emergency stop has been activated.')
             break
@@ -172,17 +200,20 @@ def run(option_num) :
         monitor.update("queue_capture", copy_frame_queue_size)
 
         try :
-            output_img = drawed_queue.get(timeout=1)
+            output_img = drawed_queue.get_nowait()
         except queue.Empty:
+            time.sleep(0.001)
             continue
         cv2.imshow("show", output_img)
 
         input_key = cv2.waitKey(1) & 0xFF
+        output_img = None
 
         if input_key == ord('q') :
             print("\n\n\033[1;31m⚠️  [EXIT] Termination command 'q' received. Stopping threads...\033[0m\n")
             logger.info("  [EXIT] Termination command 'q' received. Stopping threads... ")
             stop_queue.put(True)
+            stop = True
             break
             
     cv2.destroyAllWindows()

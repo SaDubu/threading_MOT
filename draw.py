@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import time
+import queue
 
 CLASSES = ("person", "bicycle", "car", "motorbike ", "aeroplane ", "bus ", "train", "truck ", "boat", "traffic light",
            "fire hydrant", "stop sign ", "parking meter", "bench", "bird", "cat", "dog ", "horse ", "sheep", "cow", "elephant",
@@ -17,6 +18,10 @@ class Draw() :
         self.stop_q = None
         self.drawed_q = None
         self.logger = None
+        self.no_detect_flag = None
+
+    def set_no_detect_flag(self, q) :
+        self.no_detect_flag = q
     
     def set_logger(self, logger_object) :
         self.logger = logger_object
@@ -69,12 +74,7 @@ class Draw() :
 
             #print("{:^9} {:^2} {:^12.3f} [{:>4}, {:>4}, {:>4}, {:>4}]".format(CLASSES[cl], id_n, score, top, left, right, bottom))
     
-    def post_process(self, det) :
-        box = []
-        class_id = []
-        track_id = []
-        score = []
-
+    def post_process(self, det, box, class_id, track_id, score) :
         det_len = len(det)
         if det_len == 0 :
             return None, None, None, None
@@ -87,6 +87,29 @@ class Draw() :
         
         return box, class_id, track_id, score
         
+    def no_detect_img(self) :
+        try :
+            img = self.frame_q.get_nowait()
+        except queue.Empty:
+            time.sleep(0.002)
+            return 0
+        
+        text = "NO DETECT"
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 2
+        thickness = 3
+        color = (0, 0, 255)
+
+        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+
+        img_h, img_w = img.shape[:2]
+        x = (img_w - text_w) // 2
+        y = (img_h - text_h) // 2
+
+        cv2.putText(img, text, (x, y), font, font_scale, color, thickness)
+
+        self.drawed_q.put(img)
+        return 0
 
     def run(self) :
         img = None
@@ -100,20 +123,30 @@ class Draw() :
         while True :
             if self.is_stop() :
                 break
-
-            time.sleep(0.01)
-
-            if self.frame_q.qsize() == 0 :
-                continue    
             
-            if self.track_q.qsize() == 0 :
+            if self.no_detect_flag.qsize() != 0 :
+                self.no_detect_flag.get()
+                self.no_detect_img()
                 continue
-            
-            img = self.frame_q.get()
 
-            track = self.track_q.get()
+            try :
+                track = self.track_q.get_nowait()
+            except queue.Empty:
+                time.sleep(0.002)
+                continue
 
-            box, class_id, track_id, score = self.post_process(track)
+            try :
+                img = self.frame_q.get_nowait()
+            except queue.Empty:
+                time.sleep(0.002)
+                continue
+
+            box = []
+            class_id = []
+            track_id = []
+            score = []
+    
+            box, class_id, track_id, score = self.post_process(track, box, class_id, track_id, score)
 
             if box is None :
                 continue
@@ -121,9 +154,9 @@ class Draw() :
             self.draw(img, box, score, class_id, track_id)
 
             self.drawed_q.put(img)
-        
-        self.stop_q.put(True)
 
+            img = None
+            track = None
         return 0
 
     def __del__(self):
