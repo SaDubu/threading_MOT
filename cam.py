@@ -98,9 +98,9 @@ class Cam :
             if fps_q_size != 0:
                 self.fps_q.get()
             self.fps_q.put(count)
-            if self.sort_frame_q:
+            if self.sort_frame_q == True:
                 continue
-            input_sort_img = input_draw_img.copy()
+            input_sort_img = input_npu_img.copy()
             self.sort_frame_q.put(input_sort_img)
 
     def test(self) :

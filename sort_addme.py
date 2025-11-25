@@ -468,6 +468,7 @@ class Sort_addme(object):
         self.t_1_trk = ret
         self.t_1_len = self.ret_len
 
+        self.past_frame = None 
         self.past_frame = frame
         if self.ret_len > 0:
             return np.concatenate(ret)
@@ -639,13 +640,13 @@ class Sort_addme(object):
             try :
                 raw_data = self.box_q.get_nowait()
             except queue.Empty:
-                time.sleep(0.001)
+                time.sleep(0.005)
                 continue
 
             try :
                 frame = self.sort_frame_q.get_nowait()
             except queue.Empty:
-                time.sleep(0.001)
+                time.sleep(0.005)
                 continue
             
             np_data = np.asarray(raw_data, dtype=np.float32)

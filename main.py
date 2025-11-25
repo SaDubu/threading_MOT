@@ -35,9 +35,9 @@ def show_top(label='label') :
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics("lineno")
 
-        with open(MEMORY_LOG_FILE, "w", encoding='utf-8') as f :
+        with open(MEMORY_LOG_FILE, "a", encoding='utf-8') as f :
             f.write(f'\n==== Momory at {label} ==== \n')
-            for stat in top_stats[:25] :
+            for stat in top_stats[:15] :
                 f.write(str(stat) + "\n")
 
         time.sleep(2)
@@ -121,6 +121,7 @@ def run(option_num) :
     canvas.set_stop_q(stop_queue)
     canvas.set_draw_q(drawed_queue)
     canvas.set_no_detect_flag(no_detect_flag)
+    canvas.set_sort_frame_q(sort_frame_queue)
 
     track = None
 
@@ -152,14 +153,14 @@ def run(option_num) :
     canvas_thread = WatchThread(target=canvas.run, name='canvas')
     monitor_thread = WatchThread(target=monitor.run, name='monitor')
     #memort rick, find
-    #memory_thread = WatchThread(target=show_top, name='n')
+    memory_thread = WatchThread(target=show_top, name='n')
 
     threads.append(cam_thread)
     threads.append(yolo_thread)
     threads.append(track_thread)
     threads.append(canvas_thread)
     threads.append(monitor_thread)
-    #threads.append(memory_thread)
+    threads.append(memory_thread)
 
     frame_queue_size = 0
     box_queue_size = 0
@@ -249,6 +250,8 @@ def main() :
     option_num = option_map[arg.option]
     is_run_fail = False
     while True :
+        #test
+        #option_num = 2
         is_run_fail = run(option_num)
         if not is_run_fail :
             break

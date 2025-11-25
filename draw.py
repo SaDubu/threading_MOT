@@ -19,6 +19,10 @@ class Draw() :
         self.drawed_q = None
         self.logger = None
         self.no_detect_flag = None
+        self.sort_frame_q = None
+
+    def set_sort_frame_q(self, q) :
+        self.sort_frame_q = q
 
     def set_no_detect_flag(self, q) :
         self.no_detect_flag = q
@@ -90,6 +94,7 @@ class Draw() :
     def no_detect_img(self) :
         try :
             img = self.frame_q.get_nowait()
+            self.sort_frame_q.get_nowait()
         except queue.Empty:
             time.sleep(0.002)
             return 0
