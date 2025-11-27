@@ -23,3 +23,5 @@ Features
 Capture video from OV13850 camera.
 
 Run YOLOv5s model on NPU using RKNN.
+
+"I am currently training yolov5s on another Windows PC using the snack dataset downloaded from AI Hub."
